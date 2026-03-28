@@ -4,6 +4,7 @@ import { BookCard } from '@/components/books/BookCard';
 import { BookOpen, User, Search, X, ChevronDown, ChevronUp, Globe } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
+import { SEOHead } from '@/components/layout/SEOHead';
 
 export default function AuthorsPage() {
   const { authors, books, getBooksByAuthor, getAuthor, isLoading } = useBooks();
@@ -42,6 +43,7 @@ export default function AuthorsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
+        <SEOHead title="Authors" description="Explore authors from India and around the world. Discover their books with AI summaries." url="/authors" />
         <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center animate-float">
           <BookOpen className="w-5 h-5 text-orange-500" />
         </div>

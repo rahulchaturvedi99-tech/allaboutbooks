@@ -4,6 +4,8 @@ import { BookCard } from '@/components/books/BookCard';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, BookOpen, SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn, getGenreClass } from '@/lib/utils';
+import { SEOHead } from '@/components/layout/SEOHead';
+
 
 const BOOKS_PER_PAGE = 24;
 
@@ -46,6 +48,7 @@ export default function BooksPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
+        <SEOHead title="Browse Books" description="Browse our collection of 200+ books with AI-generated summaries in English and Hindi." url="/books" />
         <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center animate-float">
           <BookOpen className="w-5 h-5 text-orange-500" />
         </div>

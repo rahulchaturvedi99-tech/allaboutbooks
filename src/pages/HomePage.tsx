@@ -4,6 +4,7 @@ import { useBooks } from '@/hooks/useBooks';
 import { BookCard } from '@/components/books/BookCard';
 import { Search, TrendingUp, BookOpen, Sparkles, ArrowRight, Globe, Languages } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SEOHead } from '@/components/layout/SEOHead';
 
 export default function HomePage() {
   const { books, authors, trendingBooks, isLoading, error, getAuthor, allGenres, searchBooks } = useBooks();
@@ -20,6 +21,7 @@ export default function HomePage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
+        <SEOHead />
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center animate-float">
             <BookOpen className="w-6 h-6 text-orange-500" />

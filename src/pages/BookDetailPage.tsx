@@ -3,6 +3,7 @@ import { useBooks } from '@/hooks/useBooks';
 import { BookCard } from '@/components/books/BookCard';
 import { AISummary } from '@/components/summary/AISummary';
 import { cn, getGenreClass, generateAmazonLink } from '@/lib/utils';
+import { SEOHead } from '@/components/layout/SEOHead';
 import { useState } from 'react';
 import {
   ArrowLeft, Calendar, BookOpen, User, Hash, Globe,
@@ -47,6 +48,16 @@ export default function BookDetailPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEOHead
+  title={`${book.title} by ${author?.name || 'Unknown'} - Summary`}
+  description={book.short_summary || book.description || `Read the AI-generated summary of ${book.title}`}
+  image={book.cover_url}
+  url={`/books/${book.id}`}
+  type="book"
+  author={author?.name}
+  isbn={book.isbn}
+  publishedYear={book.published_year}
+/>
       <div className="container-page py-6">
         {/* Breadcrumb */}
         <Link to="/" className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-orange-500 transition-colors mb-6">
