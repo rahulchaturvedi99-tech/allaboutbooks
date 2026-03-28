@@ -28,7 +28,7 @@ export function getGenreClass(genre: string): string {
 }
 
 export function generateAmazonLink(isbn: string, title: string): string {
-  const tag = 'allaboutbooks-21';
+  const tag = 'allaboutbo07b-21';
   const query = encodeURIComponent(`${title} ISBN ${isbn}`);
   return `https://www.amazon.in/s?k=${query}&tag=${tag}`;
 }
