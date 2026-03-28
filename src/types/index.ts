@@ -23,8 +23,8 @@ export interface Book {
   short_summary?: string;
   long_summary?: string;
   amazon_link?: string;
+  slug?: string;
   created_at?: string;
-  // Joined data
   author?: Author;
 }
 

@@ -2,8 +2,9 @@ import { useParams, Link } from 'react-router-dom';
 import { useBooks } from '@/hooks/useBooks';
 import { BookCard } from '@/components/books/BookCard';
 import { AISummary } from '@/components/summary/AISummary';
-import { cn, getGenreClass, generateAmazonLink } from '@/lib/utils';
 import { SEOHead } from '@/components/layout/SEOHead';
+import { BookStructuredData, BookFAQData } from '@/components/layout/StructuredData';
+import { cn, getGenreClass, generateAmazonLink } from '@/lib/utils';
 import { useState } from 'react';
 import {
   ArrowLeft, Calendar, BookOpen, User, Hash, Globe,
@@ -11,8 +12,8 @@ import {
 } from 'lucide-react';
 
 export default function BookDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const { getBook, getAuthor, getBooksByAuthor, isLoading } = useBooks();
+  const { slug } = useParams<{ slug: string }>();
+  const { getBookBySlug, getAuthor, getBooksByAuthor, isLoading } = useBooks();
   const [imgError, setImgError] = useState(false);
 
   if (isLoading) {
@@ -25,7 +26,7 @@ export default function BookDetailPage() {
     );
   }
 
-  const book = id ? getBook(id) : null;
+  const book = slug ? getBookBySlug(slug) : null;
   if (!book) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-white">
@@ -48,21 +49,29 @@ export default function BookDetailPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* SEO */}
       <SEOHead
-  title={`${book.title} by ${author?.name || 'Unknown'} - Summary`}
-  description={book.short_summary || book.description || `Read the AI-generated summary of ${book.title}`}
-  image={book.cover_url}
-  url={`/books/${book.id}`}
-  type="book"
-  author={author?.name}
-  isbn={book.isbn}
-  publishedYear={book.published_year}
-/>
+        title={`${book.title} by ${author?.name || 'Unknown'} — Summary & Key Insights`}
+        description={book.short_summary || book.description || `Read the AI-generated summary of ${book.title}`}
+        image={book.cover_url}
+        url={`/books/${book.slug || book.id}`}
+        type="book"
+        author={author?.name}
+        isbn={book.isbn}
+        publishedYear={book.published_year}
+      />
+      <BookStructuredData book={book} author={author} />
+      <BookFAQData book={book} author={author} />
+
       <div className="container-page py-6">
         {/* Breadcrumb */}
-        <Link to="/" className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-orange-500 transition-colors mb-6">
-          <ArrowLeft className="w-4 h-4" /> Back to Home
-        </Link>
+        <nav className="flex items-center gap-2 text-sm text-gray-400 mb-6">
+          <Link to="/" className="hover:text-orange-500 transition-colors">Home</Link>
+          <span>/</span>
+          <Link to="/books" className="hover:text-orange-500 transition-colors">Books</Link>
+          <span>/</span>
+          <span className="text-gray-600 line-clamp-1">{book.title}</span>
+        </nav>
 
         {/* Main Layout */}
         <div className="grid lg:grid-cols-[320px_1fr] gap-10">
@@ -72,7 +81,7 @@ export default function BookDetailPage() {
                  style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.12)' }}>
               <img
                 src={coverSrc}
-                alt={book.title}
+                alt={`${book.title} book cover`}
                 className="w-full h-full object-cover"
                 onError={() => setImgError(true)}
                 referrerPolicy="no-referrer"
@@ -92,7 +101,6 @@ export default function BookDetailPage() {
               )}
             </div>
 
-            {/* Buy Button */}
             <a
               href={amazonLink}
               target="_blank"
@@ -128,7 +136,6 @@ export default function BookDetailPage() {
               </div>
             )}
 
-            {/* Rating */}
             <div className="flex items-center gap-2 mt-4">
               <div className="flex items-center gap-0.5">
                 {[1, 2, 3, 4].map(i => (
@@ -139,7 +146,6 @@ export default function BookDetailPage() {
               <span className="text-sm text-gray-400">4.0 • Community rating</span>
             </div>
 
-            {/* Meta info */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 p-4 bg-gray-50 rounded-2xl">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-gray-400" />
@@ -171,36 +177,29 @@ export default function BookDetailPage() {
               </div>
             </div>
 
-            {/* Genres */}
             <div className="flex flex-wrap gap-2 mt-4">
               {book.genre?.map(g => (
                 <span key={g} className={cn('genre-pill', getGenreClass(g))}>{g}</span>
               ))}
             </div>
 
-            {/* Description */}
             {book.description && (
               <div className="mt-6">
-                <h3 className="font-display text-lg font-bold text-gray-800 mb-2">About this book</h3>
+                <h2 className="font-display text-lg font-bold text-gray-800 mb-2">About this book</h2>
                 <p className="text-gray-600 leading-relaxed text-sm">{book.description}</p>
               </div>
             )}
 
-            {/* AI Summary */}
             <div className="mt-8">
-              <AISummary
-                book={book}
-                authorName={author?.name}
-              />
+              <AISummary book={book} authorName={author?.name} />
             </div>
 
-            {/* More by Author */}
             {authorBooks.length > 0 && (
               <div className="mt-10">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-display text-lg font-bold text-gray-800">
+                  <h2 className="font-display text-lg font-bold text-gray-800">
                     More by {author?.name}
-                  </h3>
+                  </h2>
                   <ChevronRight className="w-5 h-5 text-gray-400" />
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">

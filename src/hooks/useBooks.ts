@@ -35,6 +35,7 @@ export function useBooks() {
 
   const getAuthor = (authorId: string) => authors.find(a => a.id === authorId);
   const getBook = (bookId: string) => books.find(b => b.id === bookId);
+  const getBookBySlug = (slug: string) => books.find(b => b.slug === slug || b.id === slug);
   const getBooksByAuthor = (authorId: string) => books.filter(b => b.author_id === authorId);
 
   const trendingBooks = useMemo(() => books.filter(b => b.trending), [books]);
@@ -63,7 +64,7 @@ export function useBooks() {
 
   return {
     books, authors, isLoading, error,
-    getAuthor, getBook, getBooksByAuthor,
+    getAuthor, getBook, getBookBySlug, getBooksByAuthor,
     trendingBooks, englishBooks, hindiBooks,
     allGenres, searchBooks,
   };
