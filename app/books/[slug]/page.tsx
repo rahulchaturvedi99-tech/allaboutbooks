@@ -1,6 +1,7 @@
 import { getBookBySlug, getAuthorById, getBooksByAuthor, getAllBooks } from '@/lib/data';
 import { BookCard } from '@/components/books/BookCard';
 import { AISummary } from '@/components/summary/AISummary';
+import { ReadScore } from '@/components/books/ReadScore';
 import { cn, getGenreClass, generateAmazonLink } from '@/lib/utils';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -13,24 +14,23 @@ import {
 
 export const revalidate = 3600;
 
-// Generate static params for all books (SSG)
 export async function generateStaticParams() {
   const books = await getAllBooks();
   return books.filter(b => b.slug).map(b => ({ slug: b.slug! }));
 }
 
-// Dynamic metadata for SEO
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const book = await getBookBySlug(params.slug);
   if (!book) return { title: 'Book Not Found' };
 
   const author = book.author_id ? await getAuthorById(book.author_id) : null;
+  const scoreText = book.read_score ? ` — Rated ${book.read_score.overall}/10` : '';
 
   return {
-    title: `${book.title} by ${author?.name || 'Unknown'} — Summary & Key Insights`,
+    title: `${book.title} by ${author?.name || 'Unknown'} — Summary & Key Insights${scoreText}`,
     description: book.short_summary || book.description || `Read the AI-generated summary of ${book.title}`,
     openGraph: {
-      title: `${book.title} — Summary`,
+      title: `${book.title} — Summary${scoreText}`,
       description: book.short_summary || book.description || '',
       images: book.cover_url ? [{ url: book.cover_url, width: 400, height: 600 }] : [],
       type: 'book',
@@ -46,7 +46,6 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
   const authorBooks = book.author_id ? (await getBooksByAuthor(book.author_id)).filter(b => b.id !== book.id) : [];
   const amazonLink = book.amazon_link || generateAmazonLink(book.isbn, book.title);
 
-  // JSON-LD Structured Data
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Book',
@@ -59,7 +58,13 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
     description: book.short_summary || book.description,
     image: book.cover_url,
     url: `https://allaboutbooks.co/books/${book.slug || book.id}`,
-    aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.0', bestRating: '5', ratingCount: '1' },
+    aggregateRating: book.read_score ? {
+      '@type': 'AggregateRating',
+      ratingValue: String(book.read_score.overall),
+      bestRating: '10',
+      worstRating: '1',
+      ratingCount: '1',
+    } : undefined,
     offers: {
       '@type': 'Offer',
       availability: 'https://schema.org/InStock',
@@ -75,7 +80,8 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
     mainEntity: [
       { '@type': 'Question', name: `What is ${book.title} about?`, acceptedAnswer: { '@type': 'Answer', text: book.short_summary } },
       { '@type': 'Question', name: `Who wrote ${book.title}?`, acceptedAnswer: { '@type': 'Answer', text: `${book.title} was written by ${author?.name || 'the author'} and published in ${book.published_year}.` } },
-    ],
+      book.verdict ? { '@type': 'Question', name: `Should I read ${book.title}?`, acceptedAnswer: { '@type': 'Answer', text: book.verdict } } : null,
+    ].filter(Boolean),
   } : null;
 
   return (
@@ -84,6 +90,7 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
       {faqLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />}
 
       <div className="container-page py-6">
+        {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-gray-400 mb-6">
           <Link href="/" className="hover:text-orange-500 transition-colors">Home</Link>
           <span>/</span>
@@ -92,8 +99,9 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
           <span className="text-gray-600 line-clamp-1">{book.title}</span>
         </nav>
 
+        {/* Main Layout */}
         <div className="grid lg:grid-cols-[320px_1fr] gap-10">
-          {/* Cover + Buy */}
+          {/* Left: Cover + Buy */}
           <div className="space-y-5">
             <div className="relative aspect-[2/3] rounded-2xl overflow-hidden bg-gray-100" style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.12)' }}>
               {book.cover_url ? (
@@ -113,15 +121,32 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
               )}
             </div>
 
+            {/* Buy Button */}
             <a href={amazonLink} target="_blank" rel="noopener noreferrer nofollow"
               className="flex items-center justify-center gap-2 w-full px-6 py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all active:scale-[0.98]"
               style={{ boxShadow: '0 4px 12px rgba(245,158,11,0.3)' }}>
               <ShoppingCart className="w-5 h-5" /> Buy on Amazon
             </a>
             <p className="text-[10px] text-gray-400 text-center">As an Amazon Associate, we earn from qualifying purchases</p>
+
+            {/* Quick score badge on sidebar */}
+            {book.read_score && (
+              <div className="flex items-center justify-center gap-3 p-3 bg-gray-50 rounded-xl">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-2xl font-display font-bold" style={{ color: book.read_score.overall >= 8 ? '#10b981' : book.read_score.overall >= 6 ? '#f59e0b' : '#ef4444' }}>
+                    {book.read_score.overall}
+                  </span>
+                  <span className="text-xs text-gray-400 font-bold">/10</span>
+                </div>
+                <div className="h-8 w-px bg-gray-200" />
+                <span className="text-xs font-semibold text-gray-500">
+                  {book.read_score.overall >= 9 ? '🔥 Must Read' : book.read_score.overall >= 7.5 ? '👍 Highly Recommended' : book.read_score.overall >= 6 ? '✅ Worth Reading' : '🤔 Consider Alternatives'}
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Details */}
+          {/* Right: Details */}
           <div>
             <h1 className="font-display text-3xl sm:text-4xl font-bold text-gray-900 leading-tight">
               {book.title_hindi || book.title}
@@ -137,14 +162,20 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
               </div>
             )}
 
+            {/* Rating from AI score */}
             <div className="flex items-center gap-2 mt-4">
               <div className="flex items-center gap-0.5">
-                {[1,2,3,4].map(i => <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
-                <Star className="w-4 h-4 text-gray-200" />
+                {[1, 2, 3, 4, 5].map(i => {
+                  const filled = book.read_score ? i <= Math.round(book.read_score.overall / 2) : i <= 4;
+                  return <Star key={i} className={cn('w-4 h-4', filled ? 'text-amber-400 fill-amber-400' : 'text-gray-200')} />;
+                })}
               </div>
-              <span className="text-sm text-gray-400">4.0</span>
+              <span className="text-sm text-gray-400">
+                {book.read_score ? `${book.read_score.overall}/10 AI Score` : '4.0'}
+              </span>
             </div>
 
+            {/* Meta info */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 p-4 bg-gray-50 rounded-2xl">
               {[
                 { icon: Calendar, label: 'Published', value: String(book.published_year) },
@@ -162,10 +193,12 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
               ))}
             </div>
 
+            {/* Genres */}
             <div className="flex flex-wrap gap-2 mt-4">
               {book.genre?.map(g => <span key={g} className={cn('genre-pill', getGenreClass(g))}>{g}</span>)}
             </div>
 
+            {/* Description */}
             {book.description && (
               <div className="mt-6">
                 <h2 className="font-display text-lg font-bold text-gray-800 mb-2">About this book</h2>
@@ -173,10 +206,36 @@ export default async function BookDetailPage({ params }: { params: { slug: strin
               </div>
             )}
 
+            {/* Should I Read This? Score */}
             <div className="mt-8">
+              <ReadScore
+                score={book.read_score || null}
+                readingTime={book.reading_time_minutes}
+                bestFor={book.best_for}
+                verdict={book.verdict}
+              />
+            </div>
+
+            {/* AI Summary */}
+            <div className="mt-6">
               <AISummary book={book} />
             </div>
 
+            {/* Buy CTA in content */}
+            <div className="mt-6 p-5 bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl border border-orange-100">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                  <p className="font-display font-bold text-gray-900">Enjoyed this summary?</p>
+                  <p className="text-sm text-gray-500 mt-0.5">Support the author — get the full book</p>
+                </div>
+                <a href={amazonLink} target="_blank" rel="noopener noreferrer nofollow"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all text-sm active:scale-[0.98]">
+                  <ShoppingCart className="w-4 h-4" /> Buy on Amazon
+                </a>
+              </div>
+            </div>
+
+            {/* More by Author */}
             {authorBooks.length > 0 && (
               <div className="mt-10">
                 <h2 className="font-display text-lg font-bold text-gray-800 mb-4">More by {author?.name}</h2>

@@ -17,6 +17,17 @@ export interface Book {
   long_summary?: string;
   amazon_link?: string;
   slug?: string;
+  read_score?: {
+    readability: number;
+    impact: number;
+    entertainment: number;
+    relevance: number;
+    value: number;
+    overall: number;
+  } | null;
+  reading_time_minutes?: number | null;
+  best_for?: string[] | null;
+  verdict?: string | null;
   created_at?: string;
 }
 
@@ -38,7 +49,6 @@ export async function getAllBooks(): Promise<Book[]> {
 
 export async function getBookBySlug(slug: string): Promise<Book | null> {
   const sb = getSupabaseServer();
-  // Try slug first, then ID
   let { data } = await sb.from('books').select('*').eq('slug', slug).single();
   if (!data) {
     const res = await sb.from('books').select('*').eq('id', slug).single();
