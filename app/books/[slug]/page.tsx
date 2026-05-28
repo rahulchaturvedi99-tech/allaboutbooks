@@ -13,14 +13,16 @@ import {
 } from 'lucide-react';
 
 export const revalidate = 3600;
+export const dynamicParams = true;
 
 export async function generateStaticParams() {
   const books = await getAllBooks();
   return books.filter(b => b.slug).map(b => ({ slug: b.slug! }));
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const book = await getBookBySlug(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const book = await getBookBySlug(slug);
   if (!book) return { title: 'Book Not Found' };
 
   const author = book.author_id ? await getAuthorById(book.author_id) : null;
@@ -38,8 +40,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function BookDetailPage({ params }: { params: { slug: string } }) {
-  const book = await getBookBySlug(params.slug);
+export default async function BookDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const book = await getBookBySlug(slug);
   if (!book) notFound();
 
   const author = book.author_id ? await getAuthorById(book.author_id) : null;
