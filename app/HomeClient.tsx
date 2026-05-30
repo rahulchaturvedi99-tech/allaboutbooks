@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { BookCard } from '@/components/books/BookCard';
-import { BookOpen, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Book, Author } from '@/lib/data';
 
@@ -28,8 +28,8 @@ export function HomeClient({ books, authors }: { books: Book[]; authors: Author[
   }, [books, lang, genre]);
 
   return (
-    <section className="container-page py-12">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+    <section className="container-page py-10">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
           <h2 className="font-display text-2xl font-bold text-gray-900">All Books</h2>
           <p className="text-sm text-gray-400 mt-0.5">{filtered.length} books</p>
@@ -51,14 +51,14 @@ export function HomeClient({ books, authors }: { books: Book[]; authors: Author[
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-        {filtered.slice(0, 12).map((book, i) => (
+      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-4">
+        {filtered.slice(0, 14).map((book, i) => (
           <BookCard key={book.id} book={book} author={getAuthor(book.author_id)} index={i} />
         ))}
       </div>
 
-      {filtered.length > 12 && (
-        <div className="text-center mt-12">
+      {filtered.length > 14 && (
+        <div className="text-center mt-10">
           <Link href="/books" className="btn-outline">View all {filtered.length} books <ArrowRight className="w-4 h-4" /></Link>
         </div>
       )}
