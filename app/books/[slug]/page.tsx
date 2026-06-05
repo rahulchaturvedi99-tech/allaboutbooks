@@ -30,7 +30,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   return {
     title: `${book.title} by ${author?.name || 'Unknown'} — Summary & Key Insights${scoreText}`,
-    description: book.short_summary || book.description || `Read the AI-generated summary of ${book.title}`,
+    description:  (book.short_summary || book.description || `Read the AI-generated summary of ${book.title}.`).slice(0, 157).trim() || book.description || `Read the AI-generated summary of ${book.title}`,
+    alternates: {
+      canonical: `/books/${book.slug || book.id}`,
+},
     openGraph: {
       title: `${book.title} — Summary${scoreText}`,
       description: book.short_summary || book.description || '',
@@ -87,6 +90,18 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
     ].filter(Boolean),
   } : null;
 
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://allaboutbooks.co' },
+      { '@type': 'ListItem', position: 2, name: 'Books', item: 'https://allaboutbooks.co/books' },
+      { '@type': 'ListItem', position: 3, name: book.title, item: `https://allaboutbooks.co/books/${book.slug || book.id}` },
+    ],
+  };
+<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {faqLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
   return (
     <div className="min-h-screen bg-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
