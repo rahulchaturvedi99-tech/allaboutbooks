@@ -4,6 +4,7 @@ import { BookCard } from '@/components/books/BookCard';
 import { HomeClient } from './HomeClient';
 import Link from 'next/link';
 import { TrendingUp, Sparkles, BookOpen, Globe, Languages, ArrowRight } from 'lucide-react';
+import { HeroSearch } from './HeroSearch';
 
 export const revalidate = 3600; // Revalidate every hour
 
@@ -21,62 +22,40 @@ export default async function HomePage() {
 
   const getAuthor = (id: string) => authors.find(a => a.id === id);
 
-  // 6 covers to fill the hero's right side. Use trending if we have enough,
-  // otherwise fall back to the general book list.
-  const heroCovers = (trending.length >= 6 ? trending : books).slice(0, 6);
-
   return (
     <div className="min-h-screen bg-white">
       {/* Hero */}
-      <section className="relative overflow-hidden border-b border-gray-100" style={{ background: 'linear-gradient(135deg, #FFF7ED 0%, #FFFFFF 50%, #EFF6FF 100%)' }}>
-        <div className="container-page relative py-10 sm:py-14">
-          <div className="grid lg:grid-cols-2 gap-10 items-center">
-            {/* Left: text */}
-            <div className="max-w-xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-100 rounded-full text-orange-700 text-xs font-bold mb-5">
-                <Sparkles className="w-3.5 h-3.5" /> AI-Powered Book Summaries
-              </div>
-              <h1 className="font-display text-4xl sm:text-5xl font-bold text-gray-900 tracking-tight leading-[1.1]">
-                Discover your next<span className="text-orange-500"> great read</span>
-              </h1>
-              <p className="text-gray-500 text-base sm:text-lg mt-4 leading-relaxed max-w-lg">
-                Explore curated books with AI-generated summaries in
-                <span className="font-semibold text-gray-700"> English</span> and
-                <span className="font-semibold text-gray-700"> Hindi</span>. Quick insights for busy readers.
-              </p>
-              <div className="mt-6">
-                <Link href="/books" className="btn-primary py-3">
-                  Browse All Books <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-              <div className="flex items-center gap-6 mt-6 text-sm">
-                <div className="flex items-center gap-2 text-gray-500">
-                  <BookOpen className="w-4 h-4 text-orange-500" />
-                  <span className="font-bold text-gray-800">{books.length}</span> Books
-                </div>
-                <div className="flex items-center gap-2 text-gray-500">
-                  <Globe className="w-4 h-4 text-blue-500" />
-                  <span className="font-bold text-gray-800">{authors.length}</span> Authors
-                </div>
-                <div className="flex items-center gap-2 text-gray-500">
-                  <Languages className="w-4 h-4 text-violet-500" /> English & Hindi
-                </div>
-              </div>
+       <section
+        className="relative border-b border-amber-100"
+        style={{ background: 'radial-gradient(ellipse 80% 90% at 50% 0%, #FBF1DE 0%, #FDF8F0 45%, #FFFFFF 100%)' }}
+      >
+        <div className="container-page py-7 sm:py-9">
+          <div className="max-w-2xl mx-auto text-center">
+            <p className="font-display italic text-amber-700/80 text-base mb-2">
+              For the curious reader
+            </p>
+            <h1 className="font-display text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight leading-[1.1]">
+              What would you like to read today?
+            </h1>
+            <p className="text-gray-500 text-base mt-3 mb-5 max-w-lg mx-auto leading-relaxed">
+              Hundreds of books with AI-written summaries in English &amp; Hindi — find your next great read in seconds.
+            </p>
+
+            {/* The search bar — the star of the show */}
+            <div className="max-w-xl mx-auto">
+              <HeroSearch />
             </div>
 
-            {/* Right: floating book covers (hidden on small screens) */}
-            <div className="hidden lg:grid grid-cols-3 gap-4">
-              {heroCovers.map((book, i) => (
+            {/* Quick-search chips */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-4 text-sm">
+              <span className="text-gray-400">Popular:</span>
+              {['Fiction', 'Self-Help', 'Biography', 'History', 'Business'].map((term) => (
                 <Link
-                  key={book.id}
-                  href={`/books/${book.slug || book.id}`}
-                  className={`block ${i % 2 === 1 ? 'mt-8' : ''}`}
+                  key={term}
+                  href={`/books?q=${encodeURIComponent(term)}`}
+                  className="px-3 py-1 rounded-full bg-white ring-1 ring-amber-200/70 text-amber-800 hover:bg-amber-50 transition"
                 >
-                  <img
-                    src={book.cover_url}
-                    alt={book.title}
-                    className="w-full aspect-[2/3] object-cover rounded-xl shadow-lg hover:-translate-y-1 transition-transform duration-200"
-                  />
+                  {term}
                 </Link>
               ))}
             </div>
